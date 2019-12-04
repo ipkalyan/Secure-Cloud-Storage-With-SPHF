@@ -1,0 +1,90 @@
+  <%@ include file="dataheader.jsp"%>
+<%@ page import ="java.sql.*"%>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>CP-ABE</title>
+  <!--[if lt IE 9]><script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+</head>
+<%@ page import="java.io.*"%>
+<%@ page import="databaseconnection.*"%>
+<%@ page import="java.sql.*"%>
+<%! int rno=0;
+String s=null;StringBuffer filedata=null;%>
+<%
+
+	 unm=(String)session.getAttribute("unm");
+ s= String.valueOf(rno);String fid1=request.getParameter("fid");
+ 	 String fnm1=request.getParameter("fname");
+ String ck=request.getParameter("sk");
+ filedata=(StringBuffer)session.getAttribute("data");
+  String kw=request.getParameter("keywords");
+ Connection con1=databasecon.getconnection();
+ PreparedStatement p=con1.prepareStatement("insert into cloud(fid,fname,filedata,owner,ckey) values(?,?,AES_ENCRYPT(?,'"+ck+"'),?,?)");
+p.setInt(1,Integer.parseInt(fid1));
+p.setString(2,fnm1);
+p.setBytes(3,new String(filedata).getBytes());
+p.setString(4,unm);
+p.setString(5,ck);
+int k=p.executeUpdate();
+if(k>0){
+
+PreparedStatement p1=con1.prepareStatement("insert into temp(fid,fname,keywords,owner) values(?,?,?,?)");
+p1.setInt(1,Integer.parseInt(fid1));
+p1.setString(2,fnm1);
+p1.setString(3,kw);
+p1.setString(4,unm);
+p1.executeUpdate();
+
+}
+ %>
+<%!String  thisLine = null;
+StringBuffer sb1=null;
+String filename=null,unm=null,fid=null,fnm=null,pkey=null;
+int i=0;
+byte data[]=null;
+%>
+<% 
+	 unm=(String)session.getAttribute("unm");
+	 String fid=request.getParameter("fid");
+	 String fnm=request.getParameter("fname");
+	 Connection con=databasecon.getconnection();
+Statement st=con.createStatement();Statement st1=con.createStatement();
+
+ResultSet r1=st.executeQuery("select filedata from cloud where fid="+fid+" ");
+if(r1.next())
+	{
+data=r1.getBytes(1);
+	}
+%>
+<body>
+  <div class="container">
+    <section class="register"><br><br><br>
+      <center><h1><font size="" color="ff6600">FileUploading</font></h1><br>
+      <form method="post" action="getPK.jsp">
+ <table>
+    <tr>
+	<td><h3>File ID:</td> <td><input type="text" name="fid" value=<%=fid%> placeholder="" required></td>
+</tr>   <tr></tr><tr></tr>
+<tr><td>
+	 <h3>FileName:</td><td><input type="text" name="fnm" value=<%=fnm%> placeholder="" required></td></tr>  <tr></tr><tr></tr>
+    <tr><td><h3>EncryptedData:&nbsp;</td><td><textarea name="data" cols=30 rows=10><%=new String(data)%></textarea></td></tr><tr></tr><tr></tr>
+  <tr><td>
+	<h3>Keywords:</td><td><textarea name="keywords" rows="2" cols="30"><%=kw%></textarea></td></tr>
+	 
+	<tr></tr><tr></tr><tr><td>
+	 </td><td><input type="submit" value="GetPublicKey">  </td></tr>  <tr></tr><tr></tr>
+	 
+	   <table>
+      </form>
+    </section>
+  </section>
+  </div><br><br><br><br><br> </div>        </div> 
+</table>
+
+<br><br><br><br><br>
+   </center>   
+        </div>        </div> 
+
+</body><%@ include file="Footer.jsp"%>

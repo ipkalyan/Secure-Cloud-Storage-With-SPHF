@@ -1,0 +1,100 @@
+  <%@ include file="dataheader.jsp"%>
+<%@ page import ="java.sql.*"%>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>CP-ABE</title>
+  <!--[if lt IE 9]><script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+</head>
+<%@ page import ="java.sql.*,PKE.*,it.unisa.dia.gas.jpbc.*,it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory, it.unisa.dia.gas.plaf.jpbc.pairing.a.TypeACurveGenerator,SPHF.*"%>
+
+<%@ page import="java.io.*"%>
+<%@ page import="databaseconnection.*"%>
+<%@ page import="java.sql.*"%>
+<%! int rno=0;
+String s=null;StringBuffer filedata=null;%>
+<%
+
+	 unm=(String)session.getAttribute("unm");
+ s= String.valueOf(rno);String fid1=request.getParameter("fid");
+ 	 String fnm1=request.getParameter("fname");
+ String ck=request.getParameter("sk");
+ filedata=(StringBuffer)session.getAttribute("data");
+ %>
+<%!String  thisLine = null;
+StringBuffer sb1=null;
+String filename=null,unm=null,fid=null,fnm=null,pkey=null;
+int i=0;
+byte data[]=null;
+%>
+<% 
+	 unm=(String)session.getAttribute("unm");
+	 String fid=request.getParameter("fid");
+	 String fnm=request.getParameter("fnm");
+	 String kw=request.getParameter("keywords");
+String publickey=request.getParameter("pk");
+CurveGenerator curveGenerator = new TypeACurveGenerator(160, 256);
+CurveParameters curveParameters = curveGenerator.generate();
+SPHF ch = new SPHF(curveGenerator, curveParameters);
+SPHF.Keys key = ch.SPHFSetup();
+
+SPHF.HashData hd1 = ch.setHashData(kw.getBytes());
+
+String hv=ch.ProjHash(key.getPublicKey(), hd1).toString();
+
+
+ Connection con1=databasecon.getconnection();
+ Statement st=con1.createStatement(); Statement st1=con1.createStatement();
+ ResultSet rst=st.executeQuery("select *from keygen where pk='non'");
+
+PreparedStatement pst1=con1.prepareStatement("update cloud set keywords=? where fid=?");
+pst1.setString(1,hv.toString());
+pst1.setString(2,fid);
+pst1.executeUpdate();
+
+
+	 Connection con=databasecon.getconnection();
+Statement stt=con.createStatement();
+Statement st11=con.createStatement();
+
+ResultSet r1=stt.executeQuery("select filedata,keywords from cloud where fid="+fid+" ");
+if(r1.next())
+	{
+data=r1.getBytes(1);
+kw=r1.getString(2);
+	}
+%>
+
+
+<div class="contact-w3layouts" id="contact">
+					<div class="container">
+						<div class="agile_wthree_inner_grids">
+							
+							<div class="col-md-6 mail-grid1-form ">
+								<form action="fileupload.jsp?msg=Upload" method="post">
+							<h1><font size="" color="ff6600">FileUploading</font><h1><br><br>
+	<table>
+    <tr>
+	<td><h3>File ID:</td> <td><input type="text" name="fid" value=<%=fid%> placeholder="" required></td>
+</tr>   <tr></tr><tr></tr>
+<tr><td>
+	 <h3>FileName:</td><td><input type="text" name="fnm" value=<%=fnm%> placeholder="" required></td></tr>  <tr></tr><tr></tr>
+    <tr><td><h3>EncryptedData:&nbsp;</td><td><textarea name="data" cols=30 rows=10><%=new String(data)%></textarea></td></tr><tr></tr><tr></tr>
+  <tr><td>
+	<h3>Keywords:</td><td><textarea name="keywords" rows="2" cols="30"><%=kw%></textarea></td></tr>
+	 
+	<tr></tr><tr></tr><tr><td>
+	 </td><td><input type="submit" value="Upload">  </td></tr>  <tr></tr><tr></tr>
+	 
+	   </table>
+								</form>
+<br><br><br>
+							</div>
+							<div class="clearfix"></div>
+						</div>
+					</div>
+				</div>
+				<!--//contact-->
+
+<%@ include file="Footer.jsp"%>
